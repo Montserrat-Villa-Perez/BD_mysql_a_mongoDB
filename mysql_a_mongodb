@@ -1,0 +1,99 @@
+import pymongo
+
+client = pymongo.MongoClient('localhost', 27017)
+db = client['mongocdmx']
+coleccion = db['Paciente']
+
+import mysql.connector
+
+conexion = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    password="kumamon-13",
+    database="covidmongo"
+)
+
+cursor = conexion.cursor(dictionary=True)
+
+consulta = "SELECT * FROM paciente"
+cursor.execute(consulta)
+paciente = cursor.fetchall()
+
+consulta = "SELECT * FROM entidades"
+cursor.execute(consulta)
+entidades = cursor.fetchall()
+
+consulta = "SELECT * FROM condicion_paciente"
+cursor.execute(consulta)
+condicion_paciente = cursor.fetchall()
+
+consulta = "SELECT * FROM indigena_migrante"
+cursor.execute(consulta)
+indigena_migrante = cursor.fetchall()
+
+consulta = "SELECT * FROM enfermedad"
+cursor.execute(consulta)
+enfermedad = cursor.fetchall()
+
+consulta = "SELECT * FROM laboratorio_antigeno"
+cursor.execute(consulta)
+laboratorio_antigeno = cursor.fetchall()
+
+cursor.close()
+conexion.close()
+
+for pac, ent, cond_pac, ind_mig, enf, lab_ant in zip(paciente, entidades, condicion_paciente, indigena_migrante, enfermedad, laboratorio_antigeno):
+    diccionario = {
+        'fecha_actualizacion' : pac['fecha_actualizacion'].strftime('%Y-%m-%d'),
+        'id_registro' : pac['id_registro'],
+        'origen' : pac['origen'],
+        'sector' : pac['sector'],
+        'sexo' : pac['sexo'],
+        'tipo_paciente' : pac['tipo_paciente'],
+        'fecha_ingreso' : pac['fecha_ingreso'].strftime('%Y-%m-%d'),
+        'fecha_sintomas' : pac['fecha_sintomas'].strftime('%Y-%m-%d'),
+        'fecha_def' : pac['fecha_def'].strftime('%Y-%m-%d'),
+        'edad' : pac['edad'],
+        'nacionalidad' : pac['nacionalidad'],
+        'clasificacion_final' : pac['clasificacion_final'],
+        'pais_nacionalidad' : pac['pais_nacionalidad'],
+        'pais_origen' : pac['pais_origen'],
+        'uci' : pac['uci'],
+        'entidades' : {
+            'entidad_um' : ent['entidad_um'],
+            'entidad_nac' : ent['entidad_nac'],
+            'entidad_res' : ent['entidad_res'],
+            'municipio_res' : ent['municipio_res']
+            },
+        'condicion_paciente' : {
+            'intubado' : cond_pac['intubado'],
+            'embarazo' : cond_pac['embarazo']
+            },
+        'indigena_migrante' : {
+            'habla_leng_indig'  : ind_mig['habla_leng_indig'],
+            'indigena' : ind_mig['indigena'],
+            'migrante' : ind_mig['migrante']
+            },
+        'enfermedad' : {
+            'neumonia' : enf['neumonia'],
+            'diabetes' : enf['diabetes'],
+            'epoc' : enf['epoc'],
+            'asma' : enf['asma'],
+            'inmusupr' : enf['inmusupr'],
+            'hipertencion' : enf['hipertencion'],
+            'otras_com' : enf['otras_com'],
+            'cardiobascular' : enf['cardiobascular'],
+            'obesidad' : enf['obesidad'],
+            'renal_cronica' : enf['renal_cronica'],
+            'tabaquismo' : enf['tabaquismo'],
+            'otro_caso' : enf['otro_caso']
+            },
+        'laboratorio_antigeno' : {
+            'toma_muestra_lab' : lab_ant['toma_muestra_lab'],
+            'resultado_lab' : lab_ant['resultado_lab'],
+            'toma_muestra_antigeno' : lab_ant['toma_muestra_antigeno'],
+            'resultado_antigeno' : lab_ant['resultado_antigeno']
+        }
+    }
+
+    coleccion.insert_one(diccionario)
